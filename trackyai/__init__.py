@@ -4,18 +4,10 @@ from functools import wraps
 from telegram import Update
 from telegram.ext import filters, MessageHandler, ApplicationBuilder, CommandHandler, ContextTypes
 
-from trackyai.config import Settings
-
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logging.getLogger('httpx').setLevel(logging.WARNING)
-logging.getLogger('httpcore').setLevel(logging.WARNING)
+from trackyai.config import settings
+from trackyai.log import setup_logging
 
 logger = logging.getLogger(__name__)
-
-settings = Settings()
 
 
 RESTRICTED_MESSAGE = """Sorry, this is a private Bot.
@@ -52,6 +44,8 @@ async def process_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 if __name__ == '__main__':
+    setup_logging()
+
     application = ApplicationBuilder().token(settings.bot_token).build()
 
     start_handler = CommandHandler('start', start)
