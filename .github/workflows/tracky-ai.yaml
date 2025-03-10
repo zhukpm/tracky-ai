@@ -1,0 +1,19 @@
+name: Tracky AI CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  test:
+    name: Test code & styles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build test image
+        run: docker compose build trackyai-test
+      - name: Run tests
+        run: docker compose run trackyai-test

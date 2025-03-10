@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  trackyai:
+    build:
+      context: .
+      target: build-base
+    container_name: trackyai_server
+    env_file:
+      - .env
+    command: ["python", "trackyai/__init__.py"]
+
+  trackyai-test:
+    build:
+      context: .
+      target: build-test
+    container_name: trackyai_test
+    environment:
+      - TRACKYAI_BOT_TOKEN=1234567890:XYZ
+      - TRACKYAI_ALLOWED_USER_IDS=[123]
+    command: ["pytest", "tests"]

@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS build-base
 
 SHELL ["/bin/bash", "-c"]
 
@@ -22,3 +22,16 @@ RUN pip install -r requirements.txt && \
 COPY trackyai trackyai
 
 CMD ["python", "trackyai/__init__.py"]
+
+FROM build-base AS build-test
+
+COPY requirements.test.txt .
+
+RUN pip install -r requirements.test.txt && \
+    rm -f requirements.test.txt && \
+    rm -rf $HOME/.cache && \
+    pip check
+
+COPY tests tests
+
+CMD ["echo", "Hello"]
