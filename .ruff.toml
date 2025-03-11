@@ -1,0 +1,37 @@
+fix = false
+target-version = "py312"
+line-length = 120
+indent-width = 4
+extend-exclude = ["tests/*"]
+
+[lint]
+fixable = ["ALL"]
+select = [
+    "A",
+    "E",
+    "W",
+    "F",
+    "I001",
+    "N",
+    "LOG",
+    "T20",
+    "ANN001",
+    "ANN201",
+    "TID",
+    "ARG"
+]
+
+[lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[lint.flake8-quotes]
+inline-quotes = "single"
+
+[lint.isort]
+known-first-party = ["trackyai"]
+
+[format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = true
+docstring-code-format = true
