@@ -32,7 +32,7 @@ RUN pip install -r requirements.test.txt && \
     rm -rf $HOME/.cache && \
     pip check
 
-COPY mypy.ini .
+COPY mypy.ini .ruff.toml ./
 COPY tests tests
 
 CMD ["echo", "Hello"]
