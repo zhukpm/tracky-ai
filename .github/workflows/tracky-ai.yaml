@@ -22,6 +22,6 @@ jobs:
           docker compose run --rm trackyai-test /bin/bash -c "mypy trackyai --install-types --non-interactive --show-traceback --raise-exceptions --config-file mypy.ini"
       - name: Run ruff
         run: |
-          docker compose run --rm trackyai-test /bin/bash -c "ruff check"
+          docker compose run --rm trackyai-test /bin/bash -c "ruff check --config .ruff.toml"
       - name: Run tests
         run: docker compose run --rm trackyai-test
