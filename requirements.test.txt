@@ -1,3 +1,4 @@
 pytest
 mypy
 mypy-extensions
+ruff
