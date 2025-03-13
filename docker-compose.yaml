@@ -5,17 +5,77 @@ services:
     build:
       context: .
       target: build-base
+    restart: always
     container_name: trackyai_server
+    depends_on:
+      - trackyai-database
     env_file:
-      - .env
+      - env/.env.tracky
+      - env/.env.db
+    environment:
+      - TRACKYAI_PG_HOST=trackyai-database
+      - TRACKYAI_PG_PORT=5432
     command: ["python", "trackyai/__init__.py"]
+    networks:
+      - trackyai-network
+
+  trackyai-database:
+    image: postgres:17
+    restart: always
+    container_name: trackyai_database
+    env_file:
+      - env/.env.db
+    environment:
+      PGDATA: /pgdata
+    volumes:
+      - ./database:/pgdata
+    networks:
+      - trackyai-network
+
+  trackyai-dev:
+    build:
+      context: .
+      target: build-base
+    restart: no
+    container_name: trackyai_server_dev
+    depends_on:
+      - trackyai-database-dev
+    env_file:
+      - env/.env.tracky
+      - env/.env.db
+    environment:
+      - TRACKYAI_PG_HOST=trackyai-database-dev
+      - TRACKYAI_PG_PORT=5432
+    command: ["python", "trackyai/__init__.py"]
+    networks:
+      - trackyai-network-dev
+
+  trackyai-database-dev:
+    image: postgres:17
+    restart: on-failure
+    container_name: trackyai_database_dev
+    env_file:
+      - env/.env.db
+    environment:
+      PGDATA: /pgdata
+    volumes:
+      - ./database:/pgdata
+    ports:
+      - "2345:5432"
+    networks:
+      - trackyai-network-dev
 
   trackyai-test:
     build:
       context: .
       target: build-test
     container_name: trackyai_test
-    environment:
-      - TRACKYAI_BOT_TOKEN=1234567890:XYZ
-      - TRACKYAI_ALLOWED_USER_IDS=[123]
+    env_file:
+      - env/.env.test
     command: ["pytest", "tests"]
+
+networks:
+  trackyai-network:
+    driver: bridge
+  trackyai-network-dev:
+    driver: bridge
