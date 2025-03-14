@@ -1,19 +1,22 @@
-from datetime import UTC, datetime
-from functools import partial
+import datetime
 
-from sqlalchemy import CheckConstraint, Column, DateTime, Float, ForeignKey, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy import CheckConstraint, ForeignKey, Text, func
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-Base = declarative_base()
+__all__ = ['Base', 'EnvironmentConfiguration', 'Expense', 'Category', 'Memory']
+
+
+class Base(AsyncAttrs, DeclarativeBase):
+    pass
 
 
 class EnvironmentConfiguration(Base):
     __tablename__ = 'env_config'
 
-    key = Column(String, primary_key=True)
-    value = Column(String, nullable=False)
-    description = Column(Text, nullable=False)
+    key: Mapped[str] = mapped_column(primary_key=True)
+    value: Mapped[str]
+    description: Mapped[str] = mapped_column(Text)
 
 
 class Expense(Base):
@@ -21,30 +24,30 @@ class Expense(Base):
 
     __table_args__ = (CheckConstraint('amount >= 0', name='check_amount_non_negative'),)
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
-    date = Column(DateTime, nullable=False, default=partial(datetime.now, tz=UTC))
-    currency = Column(String, nullable=False)
-    amount = Column(Float, nullable=False)
-    comment = Column(Text, nullable=False, default='')
+    id: Mapped[int] = mapped_column(primary_key=True)
+    category_id: Mapped[int] = mapped_column(ForeignKey('category.id'))
+    date: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
+    currency: Mapped[str]
+    amount: Mapped[float]
+    comment: Mapped[str] = mapped_column(Text, default='')
 
     # Relationships
-    category = relationship('Category', back_populates='expenses')
+    category: Mapped['Category'] = relationship('Category', back_populates='expenses')
 
 
 class Category(Base):
     __tablename__ = 'category'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False, unique=True)
-    description = Column(Text, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True)
+    description: Mapped[str] = mapped_column(Text)
 
     # Relationships
-    expenses = relationship('Expense', back_populates='category')
+    expenses: Mapped[list[Expense]] = relationship('Expense', back_populates='category')
 
 
 class Memory(Base):
     __tablename__ = 'memory'
 
-    user_id = Column(Integer, primary_key=True, autoincrement=False)
-    memory = Column(Text, nullable=False)
+    user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
+    memory: Mapped[str] = mapped_column(Text)

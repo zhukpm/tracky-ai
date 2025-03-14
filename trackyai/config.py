@@ -27,7 +27,8 @@ class Settings(BaseSettings):
     pg_port: int
     pg_db: Annotated[_PostgresDatabaseSettings, Field(default_factory=_PostgresDatabaseSettings)]
 
-    # logging
+    # logging & debug
+    debug_mode: bool = False
     log_dir: str = '/var/log'
     log_level: int | str = logging.INFO
 
