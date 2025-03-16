@@ -1,4 +1,4 @@
-pytest
+pytest[asyncio]
 mypy
 mypy-extensions
 ruff
