@@ -1,0 +1,4 @@
+Available expense categories:
+{% for cat in categories %}
+    - {{ cat.name }} (`{{ cat.id }}`) - {{ cat.description }}
+{% endfor %}

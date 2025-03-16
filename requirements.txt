@@ -1,4 +1,5 @@
 asyncpg
+Jinja2
 pydantic
 pydantic-settings
 python-telegram-bot
