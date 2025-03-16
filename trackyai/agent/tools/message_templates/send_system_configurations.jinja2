@@ -1,0 +1,4 @@
+System configurations:
+{% for ec in ecs %}
+    `{{ ec.key }} = {{ ec.value }}` ({{ ec.description }})
+{% endfor %}
