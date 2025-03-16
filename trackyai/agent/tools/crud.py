@@ -16,7 +16,7 @@ class _UpdateMemory(TgAction):
     def __init__(self, mem: str):
         self.mem = mem
 
-    async def perform(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def perform(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:  # noqa: ARG002
         if update.effective_user is None:
             return None
         await service_manager.memory.update(user_id=update.effective_user.id, memory=self.mem)
