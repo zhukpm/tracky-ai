@@ -1,8 +1,8 @@
-from typing import Any, Callable, Coroutine, Protocol, Self
+from typing import Any, Callable, Coroutine, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, model_validator
-from telegram import Update
-from telegram.ext import ContextTypes
+
+from trackyai.communication import CommunicationProxy
 
 
 class ToolArgument(BaseModel, frozen=True):
@@ -35,30 +35,30 @@ class Tool(BaseModel, frozen=True):
         return self.name == 'ask_user'
 
 
-class ToolResult(BaseModel, frozen=True):
+class ToolCall(BaseModel, frozen=True):
     name: str
+    id: str
+    parameters: dict[str, Any]
+
+
+class ToolResult(BaseModel, frozen=True):
+    tool_call: ToolCall
     result: Any
     success: bool = True
     exc_message: str | None = None
 
 
-class ToolCall(BaseModel, frozen=True):
-    name: str
-    parameters: dict[str, str]
-
-
 # Telegram actions as a side result for tools
 
 
+@runtime_checkable
 class TgAction(Protocol):
-    async def perform(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: ...
+    async def perform(self, user_id: int) -> None: ...
 
 
 class SendTextMessage(TgAction):
     def __init__(self, text: str) -> None:
         self.text = text
 
-    async def perform(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        if update.effective_user is None:
-            return
-        await context.bot.send_message(chat_id=update.effective_user.id, text=self.text)
+    async def perform(self, user_id: int) -> None:
+        await CommunicationProxy.get_for(user_id=user_id).send_text(message=self.text)

@@ -15,7 +15,9 @@ services:
     environment:
       - TRACKYAI_PG_HOST=trackyai-database
       - TRACKYAI_PG_PORT=5432
-    command: ["python", "trackyai/__init__.py"]
+    volumes:
+      - ./logs:/app/logs
+    command: ["python", "trackyai/app.py"]
     networks:
       - trackyai-network
 
@@ -48,7 +50,9 @@ services:
       - TRACKYAI_PG_PORT=5432
       - TRACKYAI_DEBUG_MODE=true
       - TRACKYAI_LOG_LEVEL=debug
-    command: ["python", "trackyai/__init__.py"]
+    volumes:
+      - ./logs:/app/logs
+    command: ["python", "trackyai/app.py"]
     networks:
       - trackyai-network-dev
 

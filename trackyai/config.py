@@ -15,6 +15,13 @@ class _PostgresDatabaseSettings(BaseSettings):
     db: str
 
 
+class _OpenAISettings(BaseSettings):
+    model_config = SettingsConfigDict(case_sensitive=False, frozen=True, env_prefix='OPENAI_')
+
+    base_url: str
+    api_key: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(case_sensitive=False, frozen=True, env_prefix='TRACKYAI_')
 
@@ -26,6 +33,9 @@ class Settings(BaseSettings):
     pg_host: str
     pg_port: int
     pg_db: Annotated[_PostgresDatabaseSettings, Field(default_factory=_PostgresDatabaseSettings)]
+
+    # openai
+    openai: Annotated[_OpenAISettings, Field(default_factory=_OpenAISettings)]
 
     # logging & debug
     debug_mode: bool = False

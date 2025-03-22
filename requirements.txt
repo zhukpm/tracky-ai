@@ -1,5 +1,6 @@
 asyncpg
 Jinja2
+openai
 pydantic
 pydantic-settings
 python-telegram-bot

@@ -3,7 +3,7 @@ import inspect
 import logging
 from typing import Annotated, Any, Callable, Coroutine, Iterable, Sequence, get_args, get_origin
 
-from trackyai.agent.tools.base import Tool, ToolArgument
+from trackyai.agent.tools.base import Tool, ToolArgument, ToolCall, ToolResult
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,10 @@ class _ToolsRegistry:
     def __contains__(self, item: Any) -> bool:
         if isinstance(item, str):
             return item in self._available_tools
-        if isinstance(item, Tool):
+        if isinstance(item, (Tool, ToolCall)):
             return item.name in self._available_tools
+        if isinstance(item, ToolResult):
+            return item.tool_call.name in self._available_tools
         if asyncio.iscoroutinefunction(item):
             return item.__name__ in self._available_tools
         logger.debug(f'Item not found in the registry: {item}')
@@ -28,9 +30,12 @@ class _ToolsRegistry:
             raise KeyError(item)
         if isinstance(item, str):
             return self._available_tools[item]
-        if isinstance(item, Tool):
+        if isinstance(item, (Tool, ToolCall)):
             return self._available_tools[item.name]
+        if isinstance(item, ToolResult):
+            return self._available_tools[item.tool_call.name]
         if not asyncio.iscoroutinefunction(item):
+            logger.warning(f'__getitem__: Item not found in the registry: {item!r}.')
             raise ValueError(f'{item} is not a coroutine function. Why?')
         return self._available_tools[item.__name__]
 
@@ -60,7 +65,7 @@ tool_registry: _ToolsRegistry = _ToolsRegistry()
 
 def _as_supported_typename(t: Any) -> str:
     tname: str = str(t.__name__) if hasattr(t, '__name__') else str(t)
-    if tname not in ('int', 'float', 'str', 'datetime'):
+    if tname not in ('int', 'float', 'str', 'datetime', 'bool', 'list'):
         raise ValueError(f'{tname} is not a supported type')
     return tname
 
@@ -97,7 +102,7 @@ def tool(
         functool = Tool(
             name=func.__name__,
             awaitable=func,
-            description=func.__doc__,
+            description=(func.__doc__ or '') + f'\nTerminating: {terminating}.',
             arguments=tool_arguments,
             terminating=terminating,
             scopes=[scopes] if isinstance(scopes, str) else tuple(scopes),

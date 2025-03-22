@@ -101,6 +101,15 @@ class ExpenseService(DbService):
         async with self.session_maker() as session:
             return (await session.scalars(stmt)).one()
 
+    async def get_many(self, expense_ids: list[int]) -> Sequence[Expense]:
+        stmt = (
+            select(Expense)
+            .where(cast(ColumnElement[bool], Expense.id.in_(expense_ids)))
+            .options(joinedload(Expense.category, innerjoin=True))
+        )
+        async with self.session_maker() as session:
+            return (await session.scalars(stmt)).all()
+
     async def get_all(self) -> Sequence[Expense]:
         stmt = select(Expense).options(joinedload(Expense.category, innerjoin=True))
         async with self.session_maker() as session:
@@ -200,6 +209,16 @@ class ExpenseService(DbService):
         )
         if limit is not None:
             stmt = stmt.limit(limit)
+        async with self.session_maker() as session:
+            return (await session.scalars(stmt)).all()
+
+    async def latest(self, limit: int) -> Sequence[Expense]:
+        stmt = (
+            select(Expense)
+            .options(joinedload(Expense.category, innerjoin=True))
+            .order_by(Expense.date.desc())
+            .limit(limit)
+        )
         async with self.session_maker() as session:
             return (await session.scalars(stmt)).all()
 

@@ -24,7 +24,11 @@ _LOGGING_CONFIG = {
         }
     },
     'root': {'handlers': ['file_handler'], 'level': settings.log_level},
-    'loggers': {'httpx': {'level': 'WARNING'}, 'httpcore': {'level': 'WARNING'}},
+    'loggers': {
+        'httpx': {'level': 'WARNING'},
+        'httpcore': {'level': 'WARNING'},
+        'telegram.ext.ExtBot': {'level': 'INFO'},
+    },
 }
 
 

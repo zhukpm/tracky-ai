@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Annotated, Sequence
 
 from jinja2 import Environment, FileSystemLoader, Template
-from telegram import Update
-from telegram.ext import ContextTypes
 
 from trackyai.agent.tools.base import SendTextMessage, TgAction
 from trackyai.agent.tools.registry import tool
@@ -16,10 +14,8 @@ class _UpdateMemory(TgAction):
     def __init__(self, mem: str):
         self.mem = mem
 
-    async def perform(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:  # noqa: ARG002
-        if update.effective_user is None:
-            return None
-        await service_manager.memory.update(user_id=update.effective_user.id, memory=self.mem)
+    async def perform(self, user_id: int) -> None:
+        await service_manager.memory.update(user_id=user_id, memory=self.mem)
 
 
 _jinja_env = Environment(loader=FileSystemLoader(searchpath=Path(__file__).parent / 'message_templates'))
@@ -160,6 +156,16 @@ async def send_expense_single(
     return SendTextMessage(text=message_template.render(expense=expense))
 
 
+@tool(terminating=True)
+async def send_expenses_list(
+    expense_ids: Annotated[list[int], 'The list of IDs (integers) of the expenses to send to the user.'],
+) -> SendTextMessage:
+    """Sends multiple expenses to the user (whole information about expenses)."""
+    expenses: Sequence[Expense] = await service_manager.expense.get_many(expense_ids=expense_ids)
+    message_template = _load_template('send_expenses')
+    return SendTextMessage(text=message_template.render(expenses=expenses))
+
+
 @tool
 async def list_categories() -> str:
     """Loads the list of all available expense categories."""
@@ -174,3 +180,27 @@ async def list_environment_configurations() -> str:
     ecs: Sequence[EnvironmentConfiguration] = await service_manager.env_config.get_all()
     template = _load_template('list_environment_configurations')
     return template.render(ecs=ecs)
+
+
+@tool
+async def find_expenses(
+    category_id: Annotated[int, ('The ID of the category for the expenses. ')],
+    date_from: Annotated[datetime.datetime, 'The datetime from which to find expenses.'],
+    date_to: Annotated[datetime.datetime, 'The datetime until which to find expenses.'],
+    currency: Annotated[str, 'The currency of expenses to find.'],
+    amount_from: Annotated[float, ('The amount from which to find expenses.')],
+    amount_to: Annotated[float, ('The amount to which to find expenses.')],
+    limit: Annotated[int, 'Limit - maximum number of expenses to find. Put a bigger value if you want to find all.'],
+) -> str:
+    """Finds a list of expenses in the database according to given filters."""
+    expenses: Sequence[Expense] = await service_manager.expense.find(
+        category_id=category_id,
+        date_from=date_from,
+        date_to=date_to,
+        currency=currency,
+        amount_from=amount_from,
+        amount_to=amount_to,
+        limit=limit,
+    )
+    template = _load_template('list_expenses')
+    return template.render(expenses=expenses)
